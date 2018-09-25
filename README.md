@@ -2,6 +2,10 @@
 # go-sniffer
 
 > 捕获mysql,redis,http,mongodb等协议...完善中
+> 方便调试项目中的数据请求。
+
+[![GitHub license](https://img.shields.io/github/license/40t/go-sniffer.svg?style=popout-square)](https://github.com/40t/go-sniffer/blob/master/LICENSE)
+
 
 
 ## Support List:
@@ -15,6 +19,9 @@
 - ...
 
 ## Demo:
+``` bash
+$ go-sniffer en0 mysql
+```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/demo.gif)
 ## Setup:
 - 支持 : `MacOS` `Linux` `Unix`
@@ -64,6 +71,7 @@ $ go run main.go
 ```
 
 ### mysql
+> 支持预处理语句等常大部分语句
 ``` bash
 $ gosniffer [设备名] mysql [参数]
 -p 置顶端口，默认3306
@@ -82,3 +90,6 @@ $ gosniffer [设备名] redis [参数]
 -p 置顶端口，默认6379
 ```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/redis.gif)
+
+## License:
+[MIT](http://opensource.org/licenses/MIT)
