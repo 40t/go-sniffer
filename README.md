@@ -1,9 +1,8 @@
 
 # go-sniffer
 
-> 捕获
+> 捕获mysql,redis,http,mongodb等协议...完善中
 
-[![Build Status](https://travis-ci.org/google/gopacket.svg?branch=master)](https://travis-ci.org/google/gopacket)
 
 ## Support List:
 - [Mysql](#Mysql)
@@ -16,7 +15,7 @@
 - ...
 
 ## Demo:
-![](http://github.com/40t/go-sniffer/raw/master/images/demo.gif)
+![image](https://github.com/40t/go-sniffer/raw/master/images/demo.gif)
 ## Setup:
 - 支持 : `MacOS` `Linux` `Unix`
 - 不支持 : `windows`
