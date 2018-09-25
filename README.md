@@ -12,7 +12,6 @@
 - [mysql](#mysql)
 - [Redis](#redis)
 - [Http](#http)
-- ARP 测试中...
 - Mongodb 开发中...
 - Fast-cgi
 - GRPC
@@ -38,9 +37,8 @@ $ apt install libcap-dev
 ```
 ### RUN
 ``` bash
-$ go get github.com/google/gopacket
-$ go get github.com/40t/go-sniffer
-$ cd $GOPATH/src/github.com/40t/go-sniffer
+$ go get -v github.com/40t/go-sniffer
+$ cd $(go env GOPATH)/src/github.com/40t/go-sniffer
 $ go run main.go
 ```
 ## Usage:
