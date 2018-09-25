@@ -5,9 +5,9 @@
 
 
 ## Support List:
-- [Mysql](#Mysql)
-- [Redis](#Redis)
-- [Http](#Http)
+- [mysql](#mysql)
+- [Redis](#redis)
+- [Http](#http)
 - ARP 测试中...
 - Mongodb 开发中...
 - Fast-cgi
@@ -62,3 +62,23 @@ $ go run main.go
 [设备名] : utun2 :   1.1.11.1
 =======================================================================
 ```
+
+### mysql
+``` bash
+$ gosniffer [设备名] mysql [参数]
+-p 置顶端口，默认3306
+```
+![image](https://github.com/40t/go-sniffer/raw/master/images/mysql.gif)
+
+### http
+``` bash
+$ gosniffer [设备名] http [参数]
+-p 置顶端口，默认80
+```
+![image](https://github.com/40t/go-sniffer/raw/master/images/http.gif)
+### redis
+``` bash
+$ gosniffer [设备名] redis [参数]
+-p 置顶端口，默认6379
+```
+![image](https://github.com/40t/go-sniffer/raw/master/images/redis.gif)
