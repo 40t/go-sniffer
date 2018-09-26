@@ -2,7 +2,9 @@
 # go-sniffer
 
 > 捕获mysql,redis,http,mongodb等协议...完善中
-> 方便调试项目中的数据请求。
+> - 抓取项目中的数据库请求，如:执行的mysql查询语句
+> - 不需要修改项目代码，通过指定端口抓包解析协议
+> - 快速预览项目中所有的数据请求,便于程序调试
 
 [![GitHub license](https://img.shields.io/github/license/40t/go-sniffer.svg?style=popout-square)](https://github.com/40t/go-sniffer/blob/master/LICENSE)
 
@@ -71,20 +73,20 @@ $ go run main.go
 ### mysql
 > 支持预处理语句等常大部分语句
 ``` bash
-$ gosniffer [设备名] mysql [参数]
+$ go-sniffer [设备名] mysql [参数]
 -p 置顶端口，默认3306
 ```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/mysql.gif)
 
 ### http
 ``` bash
-$ gosniffer [设备名] http [参数]
+$ go-sniffer [设备名] http [参数]
 -p 置顶端口，默认80
 ```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/http.gif)
 ### redis
 ``` bash
-$ gosniffer [设备名] redis [参数]
+$ go-sniffer [设备名] redis [参数]
 -p 置顶端口，默认6379
 ```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/redis.gif)
