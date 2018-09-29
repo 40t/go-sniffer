@@ -11,10 +11,12 @@ import (
 
 func GetNowStr(isClient bool) string {
 	var msg string
+	layout := "01/02 15:04:05.000000"
+	msg += time.Now().Format(layout)
 	if isClient {
-		msg = time.Now().Format("2006-01-02 15:04:05")+"| cli -> ser |"
+		msg += "| cli -> ser |"
 	}else{
-		msg = time.Now().Format("2006-01-02 15:04:05")+"| ser -> cli |"
+		msg += "| ser -> cli |"
 	}
 	return msg
 }

@@ -14,9 +14,9 @@
 - [mysql](#mysql)
 - [Redis](#redis)
 - [Http](#http)
-- Mongodb 开发中...
-- Fast-cgi
-- GRPC
+- [Mongodb](#mongodb)
+- Fast-cgi (developing)
+- GRPC (developing)
 - ...
 
 ## Demo:
@@ -78,18 +78,26 @@ $ go-sniffer [设备名] mysql [参数]
 ```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/mysql.gif)
 
-### http
-``` bash
-$ go-sniffer [设备名] http [参数]
--p 置顶端口，默认80
-```
-![image](https://github.com/40t/go-sniffer/raw/master/images/http.gif)
 ### redis
 ``` bash
 $ go-sniffer [设备名] redis [参数]
 -p 置顶端口，默认6379
 ```
 ![image](https://github.com/40t/go-sniffer/raw/master/images/redis.gif)
+
+### http
+``` bash
+$ go-sniffer [设备名] http [参数]
+-p 置顶端口，默认80
+```
+![image](https://github.com/40t/go-sniffer/raw/master/images/http.gif)
+
+### mongodb
+``` bash
+$ go-sniffer [设备名] mongodb [参数]
+-p 置顶端口，默认27017
+```
+- 支持大部分语句，只有个别少数语句没有实现
 
 ## License:
 [MIT](http://opensource.org/licenses/MIT)
