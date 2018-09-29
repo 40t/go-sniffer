@@ -95,7 +95,7 @@ $ go-sniffer [设备名] http [参数]
 ### mongodb
 ``` bash
 $ go-sniffer [设备名] mongodb [参数]
--p 置顶端口，默认27017
+-p 端口，默认27017
 ```
 - 支持大部分语句，只有个别少数语句没有实现
 
