@@ -8,6 +8,7 @@ import (
 	mysql "github.com/40t/go-sniffer/plugSrc/mysql/build"
 	redis "github.com/40t/go-sniffer/plugSrc/redis/build"
 	hp "github.com/40t/go-sniffer/plugSrc/http/build"
+	mongodb "github.com/40t/go-sniffer/plugSrc/mongodb/build"
 	"path/filepath"
 	"fmt"
 	"path"
@@ -78,12 +79,12 @@ func (p *Plug) LoadInternalPlugList() {
 	//Mysql
 	list["mysql"]   = mysql.NewInstance()
 
-	//TODO Mongodb
-
-	//TODO ARP
+	//Mongodb
+	list["mongodb"]   = mongodb.NewInstance()
 
 	//Redis
 	list["redis"]   = redis.NewInstance()
+
 	//Http
 	list["http"]    = hp.NewInstance()
 
