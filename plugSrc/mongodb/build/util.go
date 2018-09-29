@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
-	"io"
 	"time"
+	"io"
+	"github.com/40t/go-sniffer/plugSrc/mongodb/build/bson"
 )
 
 func GetNowStr(isClient bool) string {
