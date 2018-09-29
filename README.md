@@ -15,8 +15,7 @@
 - [Redis](#redis)
 - [Http](#http)
 - [Mongodb](#mongodb)
-- Fast-cgi (developing)
-- GRPC (developing)
+- Kafka (developing)
 - ...
 
 ## Demo:
@@ -27,7 +26,7 @@ $ go-sniffer en0 mysql
 ## Setup:
 - 支持 : `MacOS` `Linux` `Unix`
 - 不支持 : `windows`
-- 依赖:`libcap` `google/gopacket`库
+- 依赖:`google/gopacket`库
 
 ### 依赖库安装：Centos
 ``` bash
@@ -35,7 +34,7 @@ $ yum install libcap-devel
 ```
 ### 依赖库安装: Ubuntu
 ``` bash
-$ apt install libcap-dev
+$ apt-get install libcap-dev
 ```
 ### RUN
 ``` bash
