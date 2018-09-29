@@ -56,7 +56,7 @@ func (m *Mongodb) SetFlag(flg []string)  {
 		return
 	}
 	if c >> 1 != 1 {
-		panic("Mysql参数数量不正确!")
+		panic("Mongodb参数数量不正确!")
 	}
 	for i:=0;i<c;i=i+2 {
 		key := flg[i]
