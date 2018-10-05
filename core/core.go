@@ -1,7 +1,6 @@
 package core
 
 type Core struct{
-	//版本信息
 	Version string
 }
 
@@ -16,13 +15,13 @@ func New() Core {
 
 func (c *Core) Run()  {
 
-	//插件
+	//new plugin
 	plug := NewPlug()
 
-	//解析参数
+	//parse commend
 	cmd := NewCmd(plug)
 	cmd.Run()
 
-	//开启抓包
+	//dispatch
 	NewDispatch(plug, cmd).Capture()
 }

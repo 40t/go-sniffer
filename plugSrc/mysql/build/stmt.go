@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-
 	"errors"
 )
 
@@ -23,7 +22,7 @@ func (stmt *Stmt) WriteToText() []byte {
 
 	var buf bytes.Buffer
 
-	str := fmt.Sprintf("预处理编号[%d]: '%s';\n", stmt.ID, stmt.Query)
+	str := fmt.Sprintf("Stm id[%d]: '%s';\n", stmt.ID, stmt.Query)
 	buf.WriteString(str)
 
 	for i := 0; i < int(stmt.ParamCount); i++ {
@@ -40,7 +39,7 @@ func (stmt *Stmt) WriteToText() []byte {
 		buf.WriteString(str)
 	}
 
-	str = fmt.Sprintf("执行预处理[%d]: ", stmt.ID)
+	str = fmt.Sprintf("Execute stm id[%d]: ", stmt.ID)
 	buf.WriteString(str)
 	for i := 0; i < int(stmt.ParamCount); i++ {
 		if i == 0 {
@@ -54,7 +53,7 @@ func (stmt *Stmt) WriteToText() []byte {
 	}
 	buf.WriteString(";\n")
 
-	str = fmt.Sprintf("丢弃预处理[%d];\n", stmt.ID)
+	str = fmt.Sprintf("Drop stm id[%d];\n", stmt.ID)
 	buf.WriteString(str)
 
 	return buf.Bytes()
@@ -72,13 +71,11 @@ func (stmt *Stmt) BindArgs(nullBitmap, paramTypes, paramValues []byte) error {
 
 	for i := 0; i < int(stmt.ParamCount); i++ {
 
-		//判断参数是否为null
 		if nullBitmap[i>>3]&(1<<(uint(i)%8)) > 0 {
 			args[i] = nil
 			continue
 		}
 
-		//参数类型
 		typ := paramTypes[i<<1]
 		unsigned := (paramTypes[(i<<1)+1] & 0x80) > 0
 
@@ -168,7 +165,7 @@ func (stmt *Stmt) BindArgs(nullBitmap, paramTypes, paramValues []byte) error {
 				continue
 			}
 		default:
-			return errors.New(fmt.Sprintf("预处理未知类型 %d", typ))
+			return errors.New(fmt.Sprintf("ERR : Unknown stm type %d", typ))
 		}
 	}
 	return nil

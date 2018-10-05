@@ -16,36 +16,26 @@ import (
 
 type Plug struct {
 
-	//当前插件路径
 	dir string
-	//解析包
 	ResolveStream func(net gopacket.Flow, transport gopacket.Flow, r io.Reader)
-	//BPF
 	BPF string
 
-	//内部插件列表
 	InternalPlugList map[string]PlugInterface
-	//外部插件列表
 	ExternalPlugList map[string]ExternalPlug
 }
 
-// 内部插件必须实现此接口
-// ResolvePacket - 包入口
-// BPFFilter     - 设置BPF规则,例如mysql: (tcp and port 3306)
-// SetFlag       - 设置参数
-// Version       - 返回插件版本,例如0.1.0
+// All internal plug-ins must implement this interface
+// ResolvePacket - entry
+// BPFFilter     - set BPF, like: mysql(tcp and port 3306)
+// SetFlag       - plug-in params
+// Version       - plug-in version
 type PlugInterface interface {
-	//解析流
 	ResolveStream(net gopacket.Flow, transport gopacket.Flow, r io.Reader)
-	//BPF
 	BPFFilter() string
-	//设置插件需要的参数
 	SetFlag([]string)
-	//获取版本
 	Version() string
 }
 
-//外部插件
 type ExternalPlug struct {
 	Name          string
 	Version       string
@@ -54,24 +44,17 @@ type ExternalPlug struct {
 	SetFlag       func([]string)
 }
 
-//实例化
 func NewPlug() *Plug {
 
 	var p Plug
 
-	//设置默认插件目录
 	p.dir, _ = filepath.Abs( "./plug/")
-
-	//加载内部插件
 	p.LoadInternalPlugList()
-
-	//加载外部插件
 	p.LoadExternalPlugList()
 
 	return &p
 }
 
-//加载内部插件
 func (p *Plug) LoadInternalPlugList() {
 
 	list := make(map[string]PlugInterface)
@@ -91,12 +74,11 @@ func (p *Plug) LoadInternalPlugList() {
 	p.InternalPlugList = list
 }
 
-//加载外部so后缀插件
 func (p *Plug) LoadExternalPlugList() {
 
 	dir, err := ioutil.ReadDir(p.dir)
 	if err != nil {
-		panic(p.dir + "不存在，或者无权访问")
+		panic(p.dir + "not found")
 	}
 
 	p.ExternalPlugList = make(map[string]ExternalPlug)
@@ -141,17 +123,15 @@ func (p *Plug) LoadExternalPlugList() {
 	}
 }
 
-//改变插件地址
 func (p *Plug) ChangePath(dir string) {
 	p.dir = dir
 }
 
-//打印插件列表
 func (p *Plug) PrintList() {
 
 	//Print Internal Plug
 	for inPlugName, _ := range p.InternalPlugList {
-		fmt.Println("内部插件:"+inPlugName)
+		fmt.Println("internal plug : "+inPlugName)
 	}
 
 	//split
@@ -159,11 +139,10 @@ func (p *Plug) PrintList() {
 
 	//print External Plug
 	for exPlugName, _ := range p.ExternalPlugList {
-		fmt.Println("外部插件:"+exPlugName)
+		fmt.Println("external plug : "+exPlugName)
 	}
 }
 
-//选择当前使用的插件 && 加载插件
 func (p *Plug) SetOption(plugName string, plugParams []string) {
 
 	//Load Internal Plug

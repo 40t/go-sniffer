@@ -22,9 +22,9 @@ const (
 )
 
 type Mysql struct {
-	port       int//端口
-	version    string//插件版本
-	source     map[string]*stream//流
+	port       int
+	version    string
+	source     map[string]*stream
 }
 
 type stream struct {
@@ -101,7 +101,7 @@ func (m *Mysql) SetFlag(flg []string)  {
 		return
 	}
 	if c >> 1 == 0 {
-		fmt.Println("Mysql参数数量不正确!")
+		fmt.Println("ERR : Mysql Number of parameters")
 		os.Exit(1)
 	}
 	for i:=0;i<c;i=i+2 {
@@ -113,14 +113,14 @@ func (m *Mysql) SetFlag(flg []string)  {
 			port, err := strconv.Atoi(val);
 			m.port = port
 			if err != nil {
-				panic("端口数不正确")
+				panic("ERR : port")
 			}
 			if port < 0 || port > 65535 {
-				panic("参数不正确: 端口范围(0-65535)")
+				panic("ERR : port(0-65535)")
 			}
 			break
 		default:
-			panic("参数不正确")
+			panic("ERR : mysql's params")
 		}
 	}
 }
@@ -137,10 +137,10 @@ func (m *Mysql) newPacket(net, transport gopacket.Flow, r io.Reader) *packet {
 
 	//close stream
 	if err == io.EOF {
-		fmt.Println(net, transport, " 关闭")
+		fmt.Println(net, transport, " close")
 		return nil
 	} else if err != nil {
-		fmt.Println("错误流:", net, transport, ":", err)
+		fmt.Println("ERR : Unknown stream", net, transport, ":", err)
 	}
 
 	//generate new packet
@@ -165,7 +165,7 @@ func (m *Mysql) resolvePacketTo(r io.Reader, w io.Writer) (uint8, error) {
 		if n == 0 && err == io.EOF {
 			return 0, io.EOF
 		}
-		return 0, errors.New("错误流")
+		return 0, errors.New("ERR : Unknown stream")
 	}
 
 	length := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16)
@@ -174,9 +174,9 @@ func (m *Mysql) resolvePacketTo(r io.Reader, w io.Writer) (uint8, error) {
 	seq = header[3]
 
 	if n, err := io.CopyN(w, r, int64(length)); err != nil {
-		return 0, errors.New("错误流")
+		return 0, errors.New("ERR : Unknown stream")
 	} else if n != int64(length) {
-		return 0, errors.New("错误流")
+		return 0, errors.New("ERR : Unknown stream")
 	} else {
 		return seq, nil
 	}
@@ -222,7 +222,7 @@ func (stm *stream) resolveServerPacket(payload []byte, seq int) {
 			errorCode  := int(binary.LittleEndian.Uint16(payload[1:3]))
 			errorMsg,_ := ReadStringFromByte(payload[4:])
 
-			msg = GetNowStr(false)+"%s 错误代码:%s,错误信息:%s"
+			msg = GetNowStr(false)+"%s Err code:%s,Err msg:%s"
 			msg  = fmt.Sprintf(msg, ErrorPacket, strconv.Itoa(errorCode), strings.TrimSpace(errorMsg))
 
 		case 0x00:
@@ -230,7 +230,7 @@ func (stm *stream) resolveServerPacket(payload []byte, seq int) {
 			l,_ := LengthBinary(payload[pos:])
 			affectedRows := int(l)
 
-			msg += GetNowStr(false)+"%s 影响行数:%s"
+			msg += GetNowStr(false)+"%s Effect Row:%s"
 			msg = fmt.Sprintf(msg, OkPacket, strconv.Itoa(affectedRows))
 
 		default:
@@ -250,7 +250,7 @@ func (stm *stream) resolveClientPacket(payload []byte, seq int) {
 		msg = fmt.Sprintf("USE %s;\n", payload[1:])
 	case COM_DROP_DB:
 
-		msg = fmt.Sprintf("删除数据库 %s;\n", payload[1:])
+		msg = fmt.Sprintf("Drop DB %s;\n", payload[1:])
 	case COM_CREATE_DB, COM_QUERY:
 
 		statement := string(payload[1:])
@@ -259,17 +259,17 @@ func (stm *stream) resolveClientPacket(payload []byte, seq int) {
 
 		serverPacket := stm.findStmtPacket(stm.packets, seq+1)
 		if serverPacket == nil {
-			log.Println("找不到预处理响应包")
+			log.Println("ERR : Not found stm packet")
 		}
 
-		//获取响应包中预处理id
+		//fetch stm id
 		stmtID := binary.LittleEndian.Uint32(serverPacket.payload[1:5])
 		stmt := &Stmt{
 			ID:    stmtID,
 			Query: string(payload[1:]),
 		}
 
-		//记录预处理语句
+		//record stm sql
 		stm.stmtMap[stmtID] = stmt
 		stmt.FieldCount = binary.LittleEndian.Uint16(serverPacket.payload[5:7])
 		stmt.ParamCount = binary.LittleEndian.Uint16(serverPacket.payload[7:9])
@@ -305,19 +305,19 @@ func (stm *stream) resolveClientPacket(payload []byte, seq int) {
 		var stmt *Stmt
 		var ok bool
 		if stmt, ok = stm.stmtMap[stmtID]; ok == false {
-			log.Println("未发现预处理id: ", stmtID)
+			log.Println("ERR : Not found stm id", stmtID)
 		}
 
-		//参数
+		//params
 		pos += 5
 		if stmt.ParamCount > 0 {
 
-			//空位图（Null-Bitmap，长度 = (参数数量 + 7) / 8 字节）
+			//（Null-Bitmap，len = (paramsCount + 7) / 8 byte）
 			step := int((stmt.ParamCount + 7) / 8)
 			nullBitmap := payload[pos : pos+step]
 			pos += step
 
-			//参数分隔标志
+			//Parameter separator
 			flag := payload[pos]
 
 			pos++
@@ -325,19 +325,18 @@ func (stm *stream) resolveClientPacket(payload []byte, seq int) {
 			var pTypes  []byte
 			var pValues []byte
 
-			//如果参数分隔标志值为1
-			//n 每个参数的类型值（长度 = 参数数量 * 2 字节）
-			//n 每个参数的值
+			//if flag == 1
+			//n （len = paramsCount * 2 byte）
 			if flag == 1 {
 				pTypes = payload[pos : pos+int(stmt.ParamCount)*2]
 				pos += int(stmt.ParamCount) * 2
 				pValues = payload[pos:]
 			}
 
-			//绑定参数
+			//bind params
 			err := stmt.BindArgs(nullBitmap, pTypes, pValues)
 			if err != nil {
-				log.Println("预处理绑定参数失败: ", err)
+				log.Println("ERR : Could not bind params", err)
 			}
 		}
 		msg = string(stmt.WriteToText())
