@@ -31,19 +31,15 @@ func NewInstance() *Redis{
 	return redis
 }
 
-/**
-	解析流
- */
 func (red Redis) ResolveStream(net, transport gopacket.Flow, r io.Reader) {
 
-	//只解析clint发出去的包
 	buf := bufio.NewReader(r)
 	var cmd string
 	var cmdCount = 0
 	for {
 
 		line, _, _ := buf.ReadLine()
-		//判断链接是否断开
+
 		if len(line) == 0 {
 			buff := make([]byte, 1)
 			_, err := r.Read(buff)
@@ -53,17 +49,17 @@ func (red Redis) ResolveStream(net, transport gopacket.Flow, r io.Reader) {
 			}
 		}
 
-		//过滤无用数据
+		//Filtering useless data
 		if !strings.HasPrefix(string(line), "*") {
 			continue
 		}
 
-		//过滤服务器返回数据
+		//Do not display
 		if strings.EqualFold(transport.Src().String(), strconv.Itoa(red.port)) == true {
 			continue
 		}
 
-		//解析
+		//run
 		l := string(line[1])
 		cmdCount, _ = strconv.Atoi(l)
 		cmd = ""
@@ -87,7 +83,7 @@ func (red *Redis) SetFlag(flg []string)  {
 		return
 	}
 	if c >> 1 != 1 {
-		panic("Redis参数数量不正确!")
+		panic("ERR : Redis num of params")
 	}
 	for i:=0;i<c;i=i+2 {
 		key := flg[i]
@@ -98,14 +94,14 @@ func (red *Redis) SetFlag(flg []string)  {
 			port, err := strconv.Atoi(val);
 			redis.port = port
 			if err != nil {
-				panic("端口数不正确")
+				panic("ERR : Port error")
 			}
 			if port < 0 || port > 65535 {
-				panic("参数不正确: 端口范围(0-65535)")
+				panic("ERR : Port(0-65535)")
 			}
 			break
 		default:
-			panic("参数不正确")
+			panic("ERR : redis's params")
 		}
 	}
 }
@@ -114,13 +110,13 @@ func (red *Redis) SetFlag(flg []string)  {
 	BPFFilter
  */
 func (red *Redis) BPFFilter() string {
-	return "tcp and port "+strconv.Itoa(redis.port);
+	return "tcp and port "+strconv.Itoa(redis.port)
 }
 
 /**
 	Version
  */
 func (red *Redis) Version() string {
-	return red.version;
+	return red.version
 }
 

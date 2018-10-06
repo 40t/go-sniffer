@@ -21,8 +21,8 @@ const (
 )
 
 type H struct {
-	port       int//端口
-	version    string//插件版本
+	port       int
+	version    string
 }
 
 var hp *H
@@ -81,7 +81,7 @@ func (m *H) SetFlag(flg []string)  {
 		return
 	}
 	if c >> 1 == 0 {
-		fmt.Println("http参数数量不正确!")
+		fmt.Println("ERR : Http Number of parameters")
 		os.Exit(1)
 	}
 	for i:=0;i<c;i=i+2 {
@@ -93,14 +93,14 @@ func (m *H) SetFlag(flg []string)  {
 			port, err := strconv.Atoi(val);
 			m.port = port
 			if err != nil {
-				panic("端口数不正确")
+				panic("ERR : port")
 			}
 			if port < 0 || port > 65535 {
-				panic("参数不正确: 端口范围(0-65535)")
+				panic("ERR : port(0-65535)")
 			}
 			break
 		default:
-			panic("参数不正确")
+			panic("ERR : mysql's params")
 		}
 	}
 }

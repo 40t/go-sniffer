@@ -10,11 +10,11 @@ import (
 
 const InternalCmdPrefix = "--"
 const (
-	InternalCmdHelp = "help"  //帮助文档
-	InternalCmdEnv  = "env"   //环境变量
-	InternalCmdList = "list"  //插件列表
-	InternalCmdVer  = "ver"   //版本信息
-	InternalDevice  = "dev"   //设备链表
+	InternalCmdHelp = "help"
+	InternalCmdEnv  = "env"
+	InternalCmdList = "list"
+	InternalCmdVer  = "ver"
+	InternalDevice  = "dev"
 )
 
 type Cmd struct {
@@ -32,13 +32,13 @@ func NewCmd(p *Plug) *Cmd {
 //start
 func (cm *Cmd) Run() {
 
-	//使用帮助
+	//print help
 	if len(os.Args) <= 1 {
-		cm.printHelpMessage();
+		cm.printHelpMessage()
 		os.Exit(1)
 	}
 
-	//解析命令
+	//parse command
 	firstArg := string(os.Args[1])
 	if strings.HasPrefix(firstArg, InternalCmdPrefix) {
 		cm.parseInternalCmd()
@@ -47,7 +47,8 @@ func (cm *Cmd) Run() {
 	}
 }
 
-//解析内部参数
+//parse internal commend
+//like --help, --env, --device
 func (cm *Cmd) parseInternalCmd() {
 
 	arg := string(os.Args[1])
@@ -56,9 +57,9 @@ func (cm *Cmd) parseInternalCmd() {
 	switch cmd {
 		case InternalCmdHelp:
 			cm.printHelpMessage()
-			break;
+			break
 		case InternalCmdEnv:
-			fmt.Println("插件路径:"+cm.plugHandle.dir)
+			fmt.Println("External plug-in path : "+cm.plugHandle.dir)
 			break
 		case InternalCmdList:
 			cm.plugHandle.PrintList()
@@ -68,45 +69,45 @@ func (cm *Cmd) parseInternalCmd() {
 			break
 		case InternalDevice:
 			cm.printDevice()
-			break;
+			break
 	}
 	os.Exit(1)
 }
 
-//使用说明
+//usage
 func (cm *Cmd) printHelpMessage()  {
 
 	fmt.Println("==================================================================================")
-	fmt.Println("[使用说明]")
+	fmt.Println("[Usage]")
 	fmt.Println("")
-	fmt.Println("    go-sniffer [设备名] [插件名] [插件参数(可选)]")
+	fmt.Println("    go-sniffer [device] [plug] [plug's params(optional)]")
 	fmt.Println()
-	fmt.Println("    [例子]")
-	fmt.Println("          go-sniffer en0 redis          抓取redis数据包")
-	fmt.Println("          go-sniffer en0 mysql -p 3306  抓取mysql数据包,端口3306")
+	fmt.Println("    [exp]")
+	fmt.Println("          go-sniffer en0 redis          Capture redis packet")
+	fmt.Println("          go-sniffer en0 mysql -p 3306  Capture mysql packet")
 	fmt.Println()
-	fmt.Println("    go-sniffer --[命令]")
-	fmt.Println("               --help 帮助信息")
-	fmt.Println("               --env  环境变量")
-	fmt.Println("               --list 插件列表")
-	fmt.Println("               --ver  版本信息")
-	fmt.Println("               --dev  设备列表")
-	fmt.Println("    [例子]")
-	fmt.Println("          go-sniffer --list 查看可抓取的协议")
+	fmt.Println("    go-sniffer --[commend]")
+	fmt.Println("               --help \"this page\"")
+	fmt.Println("               --env  \"environment variable\"")
+	fmt.Println("               --list \"Plug-in list\"")
+	fmt.Println("               --ver  \"version\"")
+	fmt.Println("               --dev  \"device\"")
+	fmt.Println("    [exp]")
+	fmt.Println("          go-sniffer --list \"show all plug-in\"")
 	fmt.Println()
 	fmt.Println("==================================================================================")
 	cm.printDevice()
 	fmt.Println("==================================================================================")
 }
 
-//打印插件
+//print plug-in list
 func (cm *Cmd) printPlugList() {
 	l := len(cm.plugHandle.InternalPlugList)
 	l += len(cm.plugHandle.ExternalPlugList)
-	fmt.Println("#    插件数量："+strconv.Itoa(l))
+	fmt.Println("#    Number of plug-ins : "+strconv.Itoa(l))
 }
 
-//打印设备
+//print device
 func (cm *Cmd) printDevice() {
 	ifaces, err:= net.Interfaces()
 	if err != nil {
@@ -117,19 +118,19 @@ func (cm *Cmd) printDevice() {
 		for _,a:=range addrs {
 			if ipnet, ok := a.(*net.IPNet); ok {
 				if ip4 := ipnet.IP.To4(); ip4 != nil {
-					fmt.Println("[设备名] : "+iface.Name+" : "+iface.HardwareAddr.String()+"  "+ip4.String())
+					fmt.Println("[device] : "+iface.Name+" : "+iface.HardwareAddr.String()+"  "+ip4.String())
 				}
 			}
 		}
 	}
 }
 
-//解析插件需要的参数
+//Parameters needed for plug-ins
 func (cm *Cmd) parsePlugCmd()  {
 
 	if len(os.Args) < 3 {
-		fmt.Println("缺少[插件名]")
-		fmt.Println("go-sniffer [设备名] [插件名] [插件参数(可选)]")
+		fmt.Println("not found [Plug-in name]")
+		fmt.Println("go-sniffer [device] [plug] [plug's params(optional)]")
 		os.Exit(1)
 	}
 

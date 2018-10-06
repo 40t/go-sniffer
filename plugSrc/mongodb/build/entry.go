@@ -27,12 +27,12 @@ type stream struct {
 
 type packet struct {
 
-	isClientFlow  bool   //客户端->服务器端流
+	isClientFlow  bool   //client->server
 
-	messageLength int    //总消息大小
-	requestID     int    //此消息的标识符
-	responseTo    int    //从原始请求的requestID
-	opCode        int 	 //请求类型
+	messageLength int
+	requestID     int
+	responseTo    int
+	opCode        int 	 //request type
 
 	payload       io.Reader
 }
@@ -56,7 +56,7 @@ func (m *Mongodb) SetFlag(flg []string)  {
 		return
 	}
 	if c >> 1 != 1 {
-		panic("Mongodb参数数量不正确!")
+		panic("ERR : Mongodb Number of parameters")
 	}
 	for i:=0;i<c;i=i+2 {
 		key := flg[i]
@@ -66,15 +66,15 @@ func (m *Mongodb) SetFlag(flg []string)  {
 		case CmdPort:
 			p, err := strconv.Atoi(val);
 			if err != nil {
-				panic("端口数不正确")
+				panic("ERR : port")
 			}
 			mongodbInstance.port = p
 			if p < 0 || p > 65535 {
-				panic("参数不正确: 端口范围(0-65535)")
+				panic("ERR : port(0-65535)")
 			}
 			break
 		default:
-			panic("参数不正确")
+			panic("ERR : mysql's params")
 		}
 	}
 }
@@ -125,10 +125,10 @@ func (m *Mongodb) newPacket(net, transport gopacket.Flow, r io.Reader) *packet {
 
 	//stream close
 	if err == io.EOF {
-		fmt.Println(net, transport, " 关闭")
+		fmt.Println(net, transport, " close")
 		return nil
 	} else if err != nil {
-		fmt.Println("流解析错误", net, transport, ":", err)
+		fmt.Println("ERR : Unknown stream", net, transport, ":", err)
 		return nil
 	}
 
@@ -173,7 +173,7 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		_ = zero
 		_ = flags
 
-		msg = fmt.Sprintf(" [更新] [集合:%s] 语句: %v %v",
+		msg = fmt.Sprintf(" [Update] [coll:%s] %v %v",
 			fullCollectionName,
 			selector,
 			update,
@@ -185,7 +185,7 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		command            := ReadBson2Json(pk.payload)
 		_ = flags
 
-		msg = fmt.Sprintf(" [插入] [集合:%s] 语句: %v",
+		msg = fmt.Sprintf(" [Insert] [coll:%s] %v",
 			fullCollectionName,
 			command,
 		)
@@ -202,7 +202,7 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		command            := ReadBson2Json(pk.payload)
 		selector           := ReadBson2Json(pk.payload)
 
-		msg = fmt.Sprintf(" [查询] [集合:%s] 语句: %v %v",
+		msg = fmt.Sprintf(" [Query] [coll:%s] %v %v",
 			fullCollectionName,
 			command,
 			selector,
@@ -215,7 +215,7 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		commandArgs        := ReadBson2Json(pk.payload)
 		inputDocs          := ReadBson2Json(pk.payload)
 
-		msg = fmt.Sprintf(" [命令] [数据库:%s] [命令名:%s] %v %v %v",
+		msg = fmt.Sprintf(" [Commend] [DB:%s] [Cmd:%s] %v %v %v",
 			database,
 			commandName,
 			metaData,
@@ -230,7 +230,7 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		cursorId           := ReadInt64(pk.payload)
 		_ = zero
 
-		msg = fmt.Sprintf(" [查询更多] [集合:%s] [回复数量:%v] [游标:%v]",
+		msg = fmt.Sprintf(" [Query more] [coll:%s] [num of reply:%v] [cursor:%v]",
 			fullCollectionName,
 			numberToReturn,
 			cursorId,
@@ -244,7 +244,7 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		_ = zero
 		_ = flags
 
-		msg = fmt.Sprintf(" [删除] [集合:%s] 语句: %v",
+		msg = fmt.Sprintf(" [Delete] [coll:%s] %v",
 			fullCollectionName,
 			selector,
 		)
