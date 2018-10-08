@@ -40,9 +40,9 @@ All is ok
 ```
 ### RUN
 ``` bash
-$ go get -v github.com/40t/go-sniffer
-$ cd $(go env GOPATH)/src/github.com/40t/go-sniffer
-$ go run main.go
+$ go get -v -u github.com/40t/go-sniffer
+$ cp -rf $(go env GOPATH)/bin/go-sniffer /usr/local/bin
+$ go-sniffer
 ```
 ## Usage:
 ``` bash
