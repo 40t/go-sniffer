@@ -78,7 +78,7 @@ func (p *Plug) LoadExternalPlugList() {
 
 	dir, err := ioutil.ReadDir(p.dir)
 	if err != nil {
-		panic(p.dir + "not found")
+		return
 	}
 
 	p.ExternalPlugList = make(map[string]ExternalPlug)
