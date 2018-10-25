@@ -32,7 +32,7 @@ $ yum -y install libpcap-devel
 ```
 ### Ubuntu
 ``` bash
-$ apt-get install libcap-dev
+$ apt-get install libpcap-dev
 ```
 ### MacOs
 ``` bash
