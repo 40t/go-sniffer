@@ -28,7 +28,7 @@ $ go-sniffer en0 mysql
 
 ### Centos
 ``` bash
-$ yum install libcap-devel
+$ yum -y install libpcap-devel
 ```
 ### Ubuntu
 ``` bash
