@@ -260,6 +260,7 @@ func (stm *stream) resolveClientPacket(payload []byte, seq int) {
 		serverPacket := stm.findStmtPacket(stm.packets, seq+1)
 		if serverPacket == nil {
 			log.Println("ERR : Not found stm packet")
+			return
 		}
 
 		//fetch stm id
