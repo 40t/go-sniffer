@@ -307,6 +307,7 @@ func (stm *stream) resolveClientPacket(payload []byte, seq int) {
 		var ok bool
 		if stmt, ok = stm.stmtMap[stmtID]; ok == false {
 			log.Println("ERR : Not found stm id", stmtID)
+			return
 		}
 
 		//params
