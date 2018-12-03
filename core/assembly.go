@@ -191,28 +191,28 @@ func (p *StreamPool) connections() []*connection {
 	return conns
 }
 
- //FlushOlderThan finds any streams waiting for packets older than the given
- //time, and pushes through the data they have (IE: tells them to stop waiting
- //and skip the data they're waiting for).
- //
- //Each Stream maintains a list of zero or more sets of bytes it has received
- //out-of-order.  For example, if it has processed up through sequence number
- //10, it might have bytes [15-20), [20-25), [30,50) in its list.  Each set of
- //bytes also has the timestamp it was originally viewed.  A flush call will
- //look at the smallest subsequent set of bytes, in this case [15-20), and if
- //its timestamp is older than the passed-in time, it will push it and all
- //contiguous byte-sets out to the Stream's Reassembled function.  In this case,
- //it will push [15-20), but also [20-25), since that's contiguous.  It will
- //only push [30-50) if its timestamp is also older than the passed-in time,
- //otherwise it will wait until the next FlushOlderThan to see if bytes [25-30)
- //come in.
- //
- //If it pushes all bytes (or there were no sets of bytes to begin with) AND the
- //connection has not received any bytes since the passed-in time, the
- //connection will be closed.
- //
- //Returns the number of connections flushed, and of those, the number closed
- //because of the flush.
+//FlushOlderThan finds any streams waiting for packets older than the given
+//time, and pushes through the data they have (IE: tells them to stop waiting
+//and skip the data they're waiting for).
+//
+//Each Stream maintains a list of zero or more sets of bytes it has received
+//out-of-order.  For example, if it has processed up through sequence number
+//10, it might have bytes [15-20), [20-25), [30,50) in its list.  Each set of
+//bytes also has the timestamp it was originally viewed.  A flush call will
+//look at the smallest subsequent set of bytes, in this case [15-20), and if
+//its timestamp is older than the passed-in time, it will push it and all
+//contiguous byte-sets out to the Stream's Reassembled function.  In this case,
+//it will push [15-20), but also [20-25), since that's contiguous.  It will
+//only push [30-50) if its timestamp is also older than the passed-in time,
+//otherwise it will wait until the next FlushOlderThan to see if bytes [25-30)
+//come in.
+//
+//If it pushes all bytes (or there were no sets of bytes to begin with) AND the
+//connection has not received any bytes since the passed-in time, the
+//connection will be closed.
+//
+//Returns the number of connections flushed, and of those, the number closed
+//because of the flush.
 func (a *Assembler) FlushOlderThan(t time.Time) (flushed, closed int) {
 	conns := a.connPool.connections()
 	closes := 0

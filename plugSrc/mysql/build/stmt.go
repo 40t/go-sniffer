@@ -3,10 +3,10 @@ package build
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
-	"errors"
 )
 
 type Stmt struct {

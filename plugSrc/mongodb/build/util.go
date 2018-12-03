@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"time"
-	"io"
 	"github.com/40t/go-sniffer/plugSrc/mongodb/build/bson"
+	"io"
+	"time"
 )
 
 func GetNowStr(isClient bool) string {
@@ -15,7 +15,7 @@ func GetNowStr(isClient bool) string {
 	msg += time.Now().Format(layout)
 	if isClient {
 		msg += "| cli -> ser |"
-	}else{
+	} else {
 		msg += "| ser -> cli |"
 	}
 	return msg
@@ -54,7 +54,7 @@ func ReadString(r io.Reader) string {
 	return string(result)
 }
 
-func ReadBson2Json(r io.Reader) (string) {
+func ReadBson2Json(r io.Reader) string {
 
 	//read len
 	docLen := ReadInt32(r)
@@ -83,4 +83,3 @@ func ReadBson2Json(r io.Reader) (string) {
 	}
 	return string(jsonStr)
 }
-

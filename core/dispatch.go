@@ -12,15 +12,15 @@ import (
 )
 
 type Dispatch struct {
-	device string
+	device  string
 	payload []byte
-	Plug *Plug
+	Plug    *Plug
 }
 
 func NewDispatch(plug *Plug, cmd *Cmd) *Dispatch {
-	return &Dispatch {
-		Plug: plug,
-		device:cmd.Device,
+	return &Dispatch{
+		Plug:   plug,
+		device: cmd.Device,
 	}
 }
 
@@ -41,16 +41,16 @@ func (d *Dispatch) Capture() {
 	}
 
 	//capture
-	src     := gopacket.NewPacketSource(handle, handle.LinkType())
+	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	packets := src.Packets()
 
 	//set up assembly
 	streamFactory := &ProtocolStreamFactory{
-		dispatch:d,
+		dispatch: d,
 	}
 	streamPool := NewStreamPool(streamFactory)
-	assembler  := NewAssembler(streamPool)
-	ticker     := time.Tick(time.Minute)
+	assembler := NewAssembler(streamPool)
+	ticker := time.Tick(time.Minute)
 
 	//loop until ctrl+z
 	for {
@@ -85,7 +85,7 @@ type ProtocolStream struct {
 func (m *ProtocolStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream {
 
 	//init stream struct
-	stm := &ProtocolStream {
+	stm := &ProtocolStream{
 		net:       net,
 		transport: transport,
 		r:         tcpreader.NewReaderStream(),

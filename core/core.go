@@ -1,6 +1,6 @@
 package core
 
-type Core struct{
+type Core struct {
 	Version string
 }
 
@@ -13,7 +13,7 @@ func New() Core {
 	return cxt
 }
 
-func (c *Core) Run()  {
+func (c *Core) Run() {
 
 	//new plugin
 	plug := NewPlug()
