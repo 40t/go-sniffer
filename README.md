@@ -25,6 +25,7 @@ $ go-sniffer en0 mysql
 ## Setup:
 - support : `MacOS` `Linux` `Unix`
 - not support : `windows`
+- If you encounter problems in the `go get` process, try upgrading the go version （如果go get 过程中遇到问题，请尝试升级go版本）
 
 ### Centos
 ``` bash
@@ -36,7 +37,7 @@ $ apt-get install libpcap-dev
 ```
 ### MacOs
 ``` bash
-All is ok
+
 ```
 ### RUN
 ``` bash
