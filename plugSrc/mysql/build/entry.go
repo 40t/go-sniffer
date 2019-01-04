@@ -216,6 +216,9 @@ func (stm *stream) findStmtPacket (srv chan *packet, seq int) *packet {
 func (stm *stream) resolveServerPacket(payload []byte, seq int) {
 
 	var msg = ""
+	if len(payload) == 0 {
+		return
+	}
 	switch payload[0] {
 
 		case 0xff:
