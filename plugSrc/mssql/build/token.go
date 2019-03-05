@@ -27,15 +27,17 @@ const (
 func parseToken(buf []byte) string {
 
 	var pos = 0
-	len := 0
+	length := 0
 	for {
-
+		if len(buf) < pos+1 {
+			break
+		}
 		token := token(buf[pos])
 		switch token {
 		case tokenSSPI:
 			pos += 1
-			len = int(binary.LittleEndian.Uint16(buf[pos+1 : pos+2]))
-			pos += len
+			length = int(binary.LittleEndian.Uint16(buf[pos+1 : pos+2]))
+			pos += length
 
 		}
 		break
