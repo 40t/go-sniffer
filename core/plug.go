@@ -10,9 +10,9 @@ import (
 
 	hp "github.com/40t/go-sniffer/plugSrc/http/build"
 	mongodb "github.com/40t/go-sniffer/plugSrc/mongodb/build"
-	mysql "github.com/40t/go-sniffer/plugSrc/mysql/build"
 	redis "github.com/40t/go-sniffer/plugSrc/redis/build"
 	mssql "github.com/feiin/go-sniffer/plugSrc/mssql/build"
+	mysql "github.com/feiin/go-sniffer/plugSrc/mysql/build"
 	"github.com/google/gopacket"
 )
 
