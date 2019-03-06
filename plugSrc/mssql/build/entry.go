@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
+	"unicode/utf16"
 
 	"github.com/google/gopacket"
 )
@@ -197,6 +199,17 @@ func readStream(r io.Reader) (*packet, error) {
 	return p, nil
 }
 
+func ucs22str(s []byte) (string, error) {
+	if len(s)%2 != 0 {
+		return "", fmt.Errorf("Illegal UCS2 string length: %d", len(s))
+	}
+	buf := make([]uint16, len(s)/2)
+	for i := 0; i < len(s); i += 2 {
+		buf[i/2] = binary.LittleEndian.Uint16(s[i:])
+	}
+	return string(utf16.Decode(buf)), nil
+}
+
 func (m *stream) resolveClientPacket(p *packet) {
 
 	var msg string
@@ -204,7 +217,7 @@ func (m *stream) resolveClientPacket(p *packet) {
 	switch p.packetType {
 	case 1:
 		headerLength := int(binary.LittleEndian.Uint32(p.payload[0:4]))
-		// fmt.Printf("headers %d\n", headerLength)
+		// fmt.Printf("headers %x %d\n %x \n", p.payload[0:4], headerLength, p.payload)
 		if headerLength > 22 {
 			//not exists headers
 			msg = fmt.Sprintf("【query】 %s", string(p.payload))
@@ -213,6 +226,55 @@ func (m *stream) resolveClientPacket(p *packet) {
 			//tds 7.2+
 			msg = fmt.Sprintf("【query】 %s", string(p.payload[headerLength:]))
 		}
+	case 3:
+		// 4 byte
+		pos := 0
+		headerLength := int(binary.LittleEndian.Uint32(p.payload[0:4]))
+		// fmt.Printf("rpc headers %x %d\n \n", p.payload[0:4], headerLength)
+		pos += headerLength
+
+		//rpc name length
+		rpcLength := int(binary.LittleEndian.Uint16(p.payload[pos : pos+2]))
+
+		rpcLength = rpcLength * 2
+
+		pos += 2
+
+		rpcName, _ := ucs22str(p.payload[pos : pos+rpcLength])
+
+		// fmt.Printf("rpc name %s %d %x", rpcName, rpcLength, p.payload[pos:pos+rpcLength])
+
+		pos += rpcLength
+
+		if strings.Compare(rpcName, `sp_executesql`) != 0 {
+			return
+		}
+		//OPTIONS Flags 2byte
+
+		pos += 2
+
+		//name length 1byte
+		nameLength := int(p.payload[pos])
+		// fmt.Printf("parameter nameLength %d", nameLength)
+
+		pos = pos + 1 + nameLength*2
+
+		//STATUS FLAGS 1byte
+		pos += 1
+
+		typeNvarchar := p.payload[pos]
+		// fmt.Printf("typeNvarchar %x ", typeNvarchar)
+		if typeNvarchar == 0xe7 {
+			pos += 7
+
+			//value
+			valueLength := int(binary.LittleEndian.Uint16(p.payload[pos+1 : pos+3]))
+			pos += 2
+
+			msg = fmt.Sprintf("【query】%s", string(p.payload[pos:pos+valueLength]))
+
+		}
+		// ParameterData
 
 	case 4:
 		msg = fmt.Sprintf("【query】 %s", "Tabular result")
