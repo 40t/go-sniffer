@@ -192,7 +192,6 @@ func readStream(r io.Reader) (*packet, error) {
 
 	if p.length > 0 {
 		io.CopyN(&buffer, r, int64(p.length-8))
-
 	}
 	p.payload = buffer.Bytes()
 	return p, nil
@@ -201,9 +200,20 @@ func readStream(r io.Reader) (*packet, error) {
 func (m *stream) resolveClientPacket(p *packet) {
 
 	var msg string
+
 	switch p.packetType {
 	case 1:
-		msg = fmt.Sprintf("【query】 %s", string(p.payload))
+		headerLength := int(binary.LittleEndian.Uint32(p.payload[0:4]))
+		// fmt.Printf("headers %d\n", headerLength)
+		if headerLength > 22 {
+			//not exists headers
+			msg = fmt.Sprintf("【query】 %s", string(p.payload))
+
+		} else {
+			//tds 7.2+
+			msg = fmt.Sprintf("【query】 %s", string(p.payload[headerLength:]))
+		}
+
 	case 4:
 		msg = fmt.Sprintf("【query】 %s", "Tabular result")
 
@@ -218,10 +228,10 @@ func (m *stream) resolveServerPacket(p *packet) {
 	switch p.packetType {
 	case 4:
 		var b = int32(p.payload[0])
-		msg = fmt.Sprintf("【OK】 %d", b)
+		msg = fmt.Sprintf("【OK】%d", b)
 
 	}
 
-	parseToken(p.payload)
+	// parseToken(p.payload)
 	fmt.Println(GetNowStr(false), msg)
 }
