@@ -288,12 +288,14 @@ func (m *stream) resolveServerPacket(p *packet) {
 
 	var msg string
 	switch p.packetType {
-	case 4:
-		var b = int32(p.payload[0])
-		msg = fmt.Sprintf("【OK】%d", b)
-
+	case 4: //response
+		rows, errMsg := parseToken(p.payload)
+		if rows == 0 && len(errMsg) != 0 {
+			msg = fmt.Sprintf("【Err】Effect Rows:%d, message: %s", rows, errMsg)
+		} else {
+			msg = fmt.Sprintf("【OK】Effect Rows:%d", rows)
+		}
 	}
 
-	// parseToken(p.payload)
 	fmt.Println(GetNowStr(false), msg)
 }

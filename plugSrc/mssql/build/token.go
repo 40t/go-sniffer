@@ -2,7 +2,6 @@ package build
 
 import (
 	"encoding/binary"
-	"fmt"
 )
 
 type token byte
@@ -41,6 +40,10 @@ const (
 	typeMoney4   = 0x7a
 	typeInt8     = 0x7f
 )
+
+const _PLP_NULL = 0xFFFFFFFFFFFFFFFF
+const _UNKNOWN_PLP_LEN = 0xFFFFFFFFFFFFFFFE
+const _PLP_TERMINATOR = 0x00000000
 
 // variable-length data types
 // http://msdn.microsoft.com/en-us/library/dd358341.aspx
@@ -89,14 +92,17 @@ type columnStruct struct {
 	ColName  string
 	Size     int
 	TypeId   int
+	Reader   func(column *columnStruct, buf []byte) int
 }
 
 func readTypeInfo(pos int, buf []byte, column *columnStruct) (count int) {
-	typeId := buf[pos+1]
+	typeId := buf[pos]
 
 	count = 1
 	pos++
 	column.TypeId = int(typeId)
+	// fmt.Printf("column TypeId %x %x\n", column.TypeId, buf)
+
 	switch typeId {
 	case typeNull, typeInt1, typeBit, typeInt2, typeInt4, typeDateTim4,
 		typeFlt4, typeMoney, typeDateTime, typeFlt8, typeMoney4, typeInt8:
@@ -113,9 +119,135 @@ func readTypeInfo(pos int, buf []byte, column *columnStruct) (count int) {
 		case typeMoney, typeDateTime, typeFlt8, typeInt8:
 			column.Size = 8
 		}
+
+		column.Reader = readFixedType
 		// those are fixed length types
 	default: // all others are VARLENTYPE
 		count += readVarLen(int(typeId), pos, buf, column)
+	}
+	return count
+}
+
+func readFixedType(column *columnStruct, buf []byte) int {
+	return column.Size
+}
+
+func readByteLenType(column *columnStruct, buf []byte) int {
+	size := int(buf[0])
+	return 1 + size
+}
+
+// partially length prefixed stream
+// http://msdn.microsoft.com/en-us/library/dd340469.aspx
+func readPLPType(column *columnStruct, buf []byte) int {
+	size := binary.LittleEndian.Uint64(buf[0:8])
+	valueLength := 0
+	switch size {
+	case _PLP_NULL:
+		valueLength = 0
+	case _UNKNOWN_PLP_LEN:
+		valueLength = 1000
+	default:
+		valueLength = int(size)
+	}
+	return valueLength + 8
+}
+
+func readShortLenType(column *columnStruct, buf []byte) int {
+	size := int(binary.LittleEndian.Uint16(buf[0:2]))
+
+	return 2 + size
+}
+
+func readLongLenType(column *columnStruct, buf []byte) int {
+	count := 1
+	textptrsize := int(buf[0]) //textptrsize
+	if textptrsize == 0 {
+		return 1
+	}
+
+	count = textptrsize + 8 + 1
+	//timestamp 8
+
+	size := int(binary.LittleEndian.Uint32(buf[count : count+4]))
+	if size == -1 {
+		return count + 4
+	}
+	return count + 4 + size
+
+}
+
+// reads variant value
+// http://msdn.microsoft.com/en-us/library/dd303302.aspx
+func readVariantType(column *columnStruct, buf []byte) int {
+	count := 0
+	size := int(binary.LittleEndian.Uint32(buf[count : count+4]))
+	count = 4
+	if size == 0 {
+		return count
+	}
+	vartype := int(buf[count])
+	count += 1
+	propbytes := int(buf[count])
+	switch vartype {
+	case typeGuid:
+
+		count = count + size - 2 - propbytes
+	case typeBit:
+		count += 1
+	case typeInt1:
+		count += 1
+	case typeInt2:
+		count += 2
+	case typeInt4:
+		count += 4
+	case typeInt8:
+		count += 8
+	case typeDateTime:
+		count = count + size - 2 - propbytes
+
+	case typeDateTim4:
+		count = count + size - 2 - propbytes
+
+	case typeFlt4:
+		count = count + 4
+	case typeFlt8:
+		count = count + 8
+	case typeMoney4:
+		count = count + size - 2 - propbytes
+
+	case typeMoney:
+		count = count + size - 2 - propbytes
+
+	case typeDateN:
+		count = count + size - 2 - propbytes
+
+	case typeTimeN:
+		count += 1
+		count = count + size - 2 - propbytes
+	case typeDateTime2N:
+		count += 1
+		count = count + size - 2 - propbytes
+	case typeDateTimeOffsetN:
+		count += 1
+		count = count + size - 2 - propbytes
+	case typeBigVarBin, typeBigBinary:
+		count += 2
+		count = count + size - 2 - propbytes
+	case typeDecimalN, typeNumericN:
+		count += 2
+		count = count + size - 2 - propbytes
+	case typeBigVarChar, typeBigChar:
+		count += 5
+		count += 2 // max length, ignoring
+		count = count + size - 2 - propbytes
+
+	case typeNVarChar, typeNChar:
+		count += 5
+		count += 2 // max length, ignoring
+		count = count + size - 2 - propbytes
+	default:
+		panic("Invalid variant typeid")
 	}
 	return count
 }
@@ -125,6 +257,7 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 	switch typeId {
 	case typeDateN:
 		column.Size = 3
+		column.Reader = readByteLenType
 	case typeTimeN, typeDateTime2N, typeDateTimeOffsetN:
 
 		pos += 1 //Scale
@@ -148,6 +281,8 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 			column.Size += 5
 		}
 
+		column.Reader = readByteLenType
+
 	case typeGuid, typeIntN, typeDecimal, typeNumeric,
 		typeBitN, typeDecimalN, typeNumericN, typeFltN,
 		typeMoneyN, typeDateTimeN, typeChar,
@@ -163,6 +298,7 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 			pos += 2 //byle len types
 			count += 2
 		}
+		column.Reader = readByteLenType
 	case typeXml:
 		pos += 1 //byle len types
 		count += 1
@@ -189,6 +325,7 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 			pos += l * 2
 			count += l * 2
 		}
+		column.Reader = readPLPType
 	case typeUdt:
 		pos += 1
 		l := int(binary.LittleEndian.Uint16(buf[pos : pos+2]))
@@ -226,6 +363,7 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 		pos += l * 2
 		count += l * 2
 
+		column.Reader = readPLPType
 	case typeBigVarBin, typeBigVarChar, typeBigBinary, typeBigChar,
 		typeNVarChar, typeNChar:
 		// short len types
@@ -240,6 +378,12 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 		case typeBigVarChar, typeBigChar, typeNVarChar, typeNChar:
 			pos += 5
 			count += 5
+		}
+
+		if column.Size == 0xffff {
+			column.Reader = readPLPType
+		} else {
+			column.Reader = readShortLenType
 		}
 
 	case typeText, typeImage, typeNText, typeVariant:
@@ -265,7 +409,7 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 				pos += l
 				count += l
 			}
-
+			column.Reader = readLongLenType
 		case typeImage:
 			// ignore tablenames
 			pos++
@@ -279,6 +423,11 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 				pos += l
 				count += l
 			}
+			column.Reader = readLongLenType
+
+		case typeVariant:
+			column.Reader = readVariantType
+
 		}
 	default:
 		count += 0
@@ -286,52 +435,67 @@ func readVarLen(typeId int, pos int, buf []byte, column *columnStruct) (count in
 	return count
 }
 
-func parseToken(buf []byte) int {
+func parseToken(buf []byte) (int, string) {
 
 	var pos = 0
 	length := 0
 	rowCount := 0
+	msg := ""
 
 	var columns []columnStruct
 
+	currentBuf := buf[:]
+
 	for {
 
-		token := token(buf[pos])
+		if len(currentBuf) == 0 {
+			break
+		}
+
+		token := token(currentBuf[0])
+		// fmt.Printf("item... %x\n", currentBuf[0])
+		currentBuf = currentBuf[1:]
 
 		switch token {
 		case tokenSSPI:
-			pos += 1
-			length = int(binary.LittleEndian.Uint16(buf[pos : pos+2]))
-			pos += 1
-			pos += length
+			length = int(binary.LittleEndian.Uint16(currentBuf[0:2]))
+			currentBuf = currentBuf[length+2:]
 		case tokenReturnStatus:
-			pos += 4
+			currentBuf = currentBuf[3:]
+
 		case tokenLoginAck:
-			pos += 1
-			length = int(binary.LittleEndian.Uint16(buf[pos : pos+2]))
-			pos += 1
-			pos += length
+			length = int(binary.LittleEndian.Uint16(currentBuf[0:2]))
+			currentBuf = currentBuf[2+length:]
+
 		case tokenOrder:
-			pos += 1
-			length = int(binary.LittleEndian.Uint16(buf[pos : pos+2]))
-			pos += 1
-			pos += length
+			length = int(binary.LittleEndian.Uint16(currentBuf[0:2]))
+			currentBuf = currentBuf[2+length:]
+
 		case tokenDoneInProc:
-			pos += 5
-			rowCount = int(binary.LittleEndian.Uint64(buf[pos : pos+8]))
-			pos += 8
-			pos += rowCount
+			currentBuf = currentBuf[4:]
+			rowCount = int(binary.LittleEndian.Uint64(currentBuf[0:8]))
+			currentBuf = currentBuf[8+rowCount:]
 		case tokenDone, tokenDoneProc:
-			pos += 5
-			rowCount = int(binary.LittleEndian.Uint64(buf[pos : pos+8]))
-			pos += 8
-			pos += rowCount
+			currentBuf = currentBuf[4:]
+			rowCount = int(binary.LittleEndian.Uint64(currentBuf[0:8]))
+			currentBuf = currentBuf[8:]
+		case tokenError:
+			currentBuf = currentBuf[8:] //length2+Number4+State1+Class1
+			//message length
+			msgLength := int(binary.LittleEndian.Uint16(currentBuf[0:2]))
+
+			msgLength = msgLength * 2
+			msg, _ = ucs22str(currentBuf[0:msgLength])
+
 		case tokenColMetadata:
-			pos += 1
+
+			// fmt.Printf("tokenColMetadata1 %x\n", currentBuf)
+
 			//http://msdn.microsoft.com/en-us/library/dd357363.aspx
-			count := int(binary.LittleEndian.Uint16(buf[pos : pos+2]))
+			count := int(binary.LittleEndian.Uint16(currentBuf[0:2]))
+			currentBuf = currentBuf[2:]
+
 			columns = make([]columnStruct, count)
-			pos += 1
 
 			if count > 0 {
 				for i := 0; i < count; i++ {
@@ -339,25 +503,60 @@ func parseToken(buf []byte) int {
 					// fmt.Printf("colums %d %d", i, count)
 					column := &columns[i]
 					// x := pos
-					pos += 4 //UserType
-					pos += 2 //Flags
-					pos += readTypeInfo(pos, buf, column)
+
+					currentBuf = currentBuf[6:]
+
+					pos = readTypeInfo(0, currentBuf, column)
+
+					currentBuf = currentBuf[pos:]
 
 					//ColName
-					pos += 1 // owning schema
-					l := int(buf[pos])
-					pos += l * 2
+					l := int(currentBuf[0])
+					currentBuf = currentBuf[1:]
+					//name
+					currentBuf = currentBuf[l*2:]
+					// fmt.Printf("after name: %x\n", currentBuf)
 
 					// fmt.Printf("%d, %d ,%x\n", x, pos, buf[x+1:pos+1])
 
-					fmt.Print("%v", column)
+					// fmt.Print("%v", column)
 				}
+
+				// fmt.Printf("tokenRow %x\n", currentBuf)
+
 			}
 		case tokenRow:
+			count := 0
+			// fmt.Printf("tokenRow currentBuf %x %v\n", currentBuf)
 
+			for _, column := range columns {
+
+				count = column.Reader(&column, currentBuf)
+				currentBuf = currentBuf[count:]
+				// fmt.Printf("tokenRow %d %x \n", i, currentBuf)
+
+			}
+		case tokenNbcRow:
+			bitlen := (len(columns) + 7) / 8
+
+			pres := currentBuf[0:bitlen]
+			currentBuf = currentBuf[bitlen:]
+			count := 0
+
+			for i, column := range columns {
+				if pres[i/8]&(1<<(uint(i)%8)) != 0 {
+					continue
+				}
+				count = column.Reader(&column, currentBuf)
+				currentBuf = currentBuf[count:]
+
+				// fmt.Printf("tokenNbcRow %d %x \n", i, currentBuf)
+
+			}
+		default:
+			break
 		}
-		break
 
 	}
-	return rowCount
+	return rowCount, msg
 }
