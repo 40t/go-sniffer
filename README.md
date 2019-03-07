@@ -1,7 +1,7 @@
 
 # go-sniffer
 
-> Capture mysql,redis,http,mongodb etc protocol...
+> Capture mysql,mssql,redis,http,mongodb etc protocol...
 > 抓包截取项目中的数据库请求并解析成相应的语句，如mysql协议会解析为sql语句,便于调试。
 > 不要修改代码，直接嗅探项目中的数据请求。
 
@@ -14,6 +14,7 @@
 - [Redis](#redis)
 - [Http](#http)
 - [Mongodb](#mongodb)
+- [mssql](#mssql)
 - Kafka (developing)
 - ...
 
@@ -104,6 +105,8 @@ $ go-sniffer lo0 mysql
 $ go-sniffer en0 redis 
 $ go-sniffer eth0 http -p 8080
 $ go-sniffer eth1 mongodb
+$ go-sniffer eth0 mssql 
+
 ```
 ## License:
 [MIT](http://opensource.org/licenses/MIT)
