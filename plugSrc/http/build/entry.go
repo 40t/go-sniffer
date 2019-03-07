@@ -59,7 +59,7 @@ func (m *H) ResolveStream(net, transport gopacket.Flow, buf io.Reader) {
 			msg += req.Form.Encode()
 			msg += "]"
 
-			fmt.Printf(time.Now().Format("2006-01-02 15:04:05.000") + " | " + msg)
+			fmt.Println(time.Now().Format("2006-01-02 15:04:05.000") + " | " + msg)
 			// log.Println()
 			req.Body.Close()
 		}
