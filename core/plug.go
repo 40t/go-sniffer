@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"plugin"
 
-	hp "github.com/feiin/go-sniffer/plugSrc/http/build"
-	mongodb "github.com/feiin/go-sniffer/plugSrc/mongodb/build"
-	mssql "github.com/feiin/go-sniffer/plugSrc/mssql/build"
-	mysql "github.com/feiin/go-sniffer/plugSrc/mysql/build"
-	redis "github.com/feiin/go-sniffer/plugSrc/redis/build"
+	hp "github.com/40t/go-sniffer/plugSrc/http/build"
+	mongodb "github.com/40t/go-sniffer/plugSrc/mongodb/build"
+	mssql "github.com/40t/go-sniffer/plugSrc/mssql/build"
+	mysql "github.com/40t/go-sniffer/plugSrc/mysql/build"
+	redis "github.com/40t/go-sniffer/plugSrc/redis/build"
 	"github.com/google/gopacket"
 )
 
