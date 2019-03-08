@@ -468,15 +468,16 @@ func parseToken(buf []byte) (rowCount int, msg string) {
 			length = int(binary.LittleEndian.Uint16(currentBuf[0:2]))
 			currentBuf = currentBuf[length+2:]
 		case tokenReturnStatus:
-			currentBuf = currentBuf[3:]
+			currentBuf = currentBuf[4:]
 
 		case tokenLoginAck:
 			length = int(binary.LittleEndian.Uint16(currentBuf[0:2]))
-			currentBuf = currentBuf[2+length:]
+			currentBuf = currentBuf[length+2:]
 
 		case tokenOrder:
 			length = int(binary.LittleEndian.Uint16(currentBuf[0:2]))
-			currentBuf = currentBuf[2+length:]
+			//col ColIds
+			currentBuf = currentBuf[2+2*length:] //ColIds data
 
 		case tokenDoneInProc:
 			currentBuf = currentBuf[4:]
