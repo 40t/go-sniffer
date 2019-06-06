@@ -188,6 +188,9 @@ func (stm *stream) resolve() {
 	for {
 		select {
 		case packet := <- stm.packets:
+			if packet.length == 0 {
+				break
+			}
 			if packet.isClientFlow {
 				stm.resolveClientPacket(packet.payload, packet.seq)
 			} else {
