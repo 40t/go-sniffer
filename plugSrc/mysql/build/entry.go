@@ -180,8 +180,6 @@ func (m *Mysql) resolvePacketTo(r io.Reader, w io.Writer) (uint8, error) {
 	} else {
 		return seq, nil
 	}
-
-	return seq, nil
 }
 
 func (stm *stream) resolve() {
