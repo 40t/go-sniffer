@@ -110,4 +110,4 @@ $ go-sniffer eth1 mongodb
 
 ## 感谢
 
-<img src="https://github.com/40t/go-sniffer/raw/master/images/wechat.jpg" width = "200" height = "200" div align=right />
+<img src="https://github.com/40t/go-sniffer/thx/images/wechat.jpg" width = "200" height = "200" div align=left />
