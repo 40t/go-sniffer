@@ -1,28 +1,29 @@
 package build
 
 import (
-	"github.com/google/gopacket"
+	"bufio"
+	"fmt"
 	"io"
 	"log"
-	"strconv"
-	"fmt"
-	"os"
-	"bufio"
 	"net/http"
+	"os"
+	"strconv"
+
+	"github.com/google/gopacket"
 )
 
 const (
-	Port       = 80
-	Version    = "0.1"
+	Port    = 80
+	Version = "0.1"
 )
 
 const (
-	CmdPort    = "-p"
+	CmdPort = "-p"
 )
 
 type H struct {
-	port       int
-	version    string
+	port    int
+	version string
 }
 
 var hp *H
@@ -30,8 +31,8 @@ var hp *H
 func NewInstance() *H {
 	if hp == nil {
 		hp = &H{
-			port   :Port,
-			version:Version,
+			port:    Port,
+			version: Version,
 		}
 	}
 	return hp
@@ -66,31 +67,31 @@ func (m *H) ResolveStream(net, transport gopacket.Flow, buf io.Reader) {
 }
 
 func (m *H) BPFFilter() string {
-	return "tcp and port "+strconv.Itoa(m.port);
+	return "tcp and port " + strconv.Itoa(m.port)
 }
 
 func (m *H) Version() string {
 	return Version
 }
 
-func (m *H) SetFlag(flg []string)  {
+func (m *H) SetFlag(flg []string) {
 
 	c := len(flg)
 
 	if c == 0 {
 		return
 	}
-	if c >> 1 == 0 {
+	if c>>1 == 0 {
 		fmt.Println("ERR : Http Number of parameters")
 		os.Exit(1)
 	}
-	for i:=0;i<c;i=i+2 {
+	for i := 0; i < c; i = i + 2 {
 		key := flg[i]
 		val := flg[i+1]
 
 		switch key {
 		case CmdPort:
-			port, err := strconv.Atoi(val);
+			port, err := strconv.Atoi(val)
 			m.port = port
 			if err != nil {
 				panic("ERR : port")

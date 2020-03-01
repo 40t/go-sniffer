@@ -773,7 +773,7 @@ func (d *decodeState) isNull(off int) bool {
 // name consumes a const or function from d.data[d.off-1:], decoding into the value v.
 // the first byte of the function name has been read already.
 func (d *decodeState) name(v reflect.Value) {
-	if d.isNull(d.off-1) {
+	if d.isNull(d.off - 1) {
 		d.literal(v)
 		return
 	}
@@ -859,7 +859,7 @@ func (d *decodeState) name(v reflect.Value) {
 	}
 
 	// TODO Fix case of func field as map.
-	//topv := v
+	// topv := v
 
 	// Figure out field corresponding to function.
 	key := []byte(funcData.key)
@@ -1076,9 +1076,9 @@ func (d *decodeState) storeKeyed(v reflect.Value) bool {
 }
 
 var (
-	trueBytes = []byte("true")
+	trueBytes  = []byte("true")
 	falseBytes = []byte("false")
-	nullBytes = []byte("null")
+	nullBytes  = []byte("null")
 )
 
 func (d *decodeState) storeValue(v reflect.Value, from interface{}) {
@@ -1173,7 +1173,7 @@ var numberType = reflect.TypeOf(Number(""))
 func (d *decodeState) literalStore(item []byte, v reflect.Value, fromQuoted bool) {
 	// Check for unmarshaler.
 	if len(item) == 0 {
-		//Empty string given
+		// Empty string given
 		d.saveError(fmt.Errorf("json: invalid use of ,string struct tag, trying to unmarshal %q into %v", item, v.Type()))
 		return
 	}

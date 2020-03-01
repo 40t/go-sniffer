@@ -1,33 +1,34 @@
 package build
 
 import (
-	"github.com/google/gopacket"
-	"io"
-	"strings"
-	"fmt"
-	"strconv"
 	"bufio"
+	"fmt"
+	"io"
+	"strconv"
+	"strings"
+
+	"github.com/google/gopacket"
 )
 
 type Redis struct {
-	port int
+	port    int
 	version string
-	cmd chan string
-	done chan bool
+	cmd     chan string
+	done    chan bool
 }
 
 const (
-	Port       int = 6379
+	Port    int    = 6379
 	Version string = "0.1"
 	CmdPort string = "-p"
 )
 
-var redis = &Redis {
-	port:Port,
-	version:Version,
+var redis = &Redis{
+	port:    Port,
+	version: Version,
 }
 
-func NewInstance() *Redis{
+func NewInstance() *Redis {
 	return redis
 }
 
@@ -49,23 +50,23 @@ func (red Redis) ResolveStream(net, transport gopacket.Flow, r io.Reader) {
 			}
 		}
 
-		//Filtering useless data
+		// Filtering useless data
 		if !strings.HasPrefix(string(line), "*") {
 			continue
 		}
 
-		//Do not display
+		// Do not display
 		if strings.EqualFold(transport.Src().String(), strconv.Itoa(red.port)) == true {
 			continue
 		}
 
-		//run
+		// run
 		l := string(line[1])
 		cmdCount, _ = strconv.Atoi(l)
 		cmd = ""
-		for j := 0; j < cmdCount * 2; j++ {
+		for j := 0; j < cmdCount*2; j++ {
 			c, _, _ := buf.ReadLine()
-			if j & 1 == 0 {
+			if j&1 == 0 {
 				continue
 			}
 			cmd += " " + string(c)
@@ -74,24 +75,22 @@ func (red Redis) ResolveStream(net, transport gopacket.Flow, r io.Reader) {
 	}
 }
 
-/**
-	SetOption
- */
-func (red *Redis) SetFlag(flg []string)  {
+// SetOption
+func (red *Redis) SetFlag(flg []string) {
 	c := len(flg)
 	if c == 0 {
 		return
 	}
-	if c >> 1 != 1 {
+	if c>>1 != 1 {
 		panic("ERR : Redis num of params")
 	}
-	for i:=0;i<c;i=i+2 {
+	for i := 0; i < c; i = i + 2 {
 		key := flg[i]
 		val := flg[i+1]
 
 		switch key {
 		case CmdPort:
-			port, err := strconv.Atoi(val);
+			port, err := strconv.Atoi(val)
 			redis.port = port
 			if err != nil {
 				panic("ERR : Port error")
@@ -106,17 +105,12 @@ func (red *Redis) SetFlag(flg []string)  {
 	}
 }
 
-/**
-	BPFFilter
- */
+// BPFFilter
 func (red *Redis) BPFFilter() string {
-	return "tcp and port "+strconv.Itoa(redis.port)
+	return "tcp and port " + strconv.Itoa(redis.port)
 }
 
-/**
-	Version
- */
+// Version
 func (red *Redis) Version() string {
 	return red.version
 }
-

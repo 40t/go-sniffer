@@ -2,57 +2,58 @@ package core
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
-	"log"
-	"time"
 )
 
 type Dispatch struct {
-	device string
+	device  string
 	payload []byte
-	Plug *Plug
+	Plug    *Plug
 }
 
 func NewDispatch(plug *Plug, cmd *Cmd) *Dispatch {
-	return &Dispatch {
-		Plug: plug,
-		device:cmd.Device,
+	return &Dispatch{
+		Plug:   plug,
+		device: cmd.Device,
 	}
 }
 
 func (d *Dispatch) Capture() {
 
-	//init device
+	// init device
 	handle, err := pcap.OpenLive(d.device, 65535, false, pcap.BlockForever)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	//set filter
+	// set filter
 	fmt.Println(d.Plug.BPF)
 	err = handle.SetBPFFilter(d.Plug.BPF)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//capture
-	src     := gopacket.NewPacketSource(handle, handle.LinkType())
+	// capture
+	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	packets := src.Packets()
 
-	//set up assembly
+	// set up assembly
 	streamFactory := &ProtocolStreamFactory{
-		dispatch:d,
+		dispatch: d,
 	}
 	streamPool := NewStreamPool(streamFactory)
-	assembler  := NewAssembler(streamPool)
-	ticker     := time.Tick(time.Minute)
+	assembler := NewAssembler(streamPool)
+	ticker := time.Tick(time.Minute)
 
-	//loop until ctrl+z
+	// loop until ctrl+z
 	for {
 		select {
 		case packet := <-packets:
@@ -84,17 +85,17 @@ type ProtocolStream struct {
 
 func (m *ProtocolStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream {
 
-	//init stream struct
-	stm := &ProtocolStream {
+	// init stream struct
+	stm := &ProtocolStream{
 		net:       net,
 		transport: transport,
 		r:         tcpreader.NewReaderStream(),
 	}
 
-	//new stream
+	// new stream
 	fmt.Println("# Start new stream:", net, transport)
 
-	//decode packet
+	// decode packet
 	go m.dispatch.Plug.ResolveStream(net, transport, &(stm.r))
 
 	return &(stm.r)
