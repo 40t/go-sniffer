@@ -58,7 +58,7 @@ func (d Decimal128) String() string {
 		// Bits: 1*sign 2*ignored 14*exponent 111*significand.
 		// Implicit 0b100 prefix in significand.
 		e = int(d.h>>47&(1<<14-1)) - 6176
-		//h = 4<<47 | d.h&(1<<47-1)
+		// h = 4<<47 | d.h&(1<<47-1)
 		// Spec says all of these values are out of range.
 		h, l = 0, 0
 	} else {

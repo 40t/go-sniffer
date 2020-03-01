@@ -12,13 +12,13 @@ func GetNowStr(isClient bool) string {
 	msg += time.Now().Format("2006-01-02 15:04:05")
 	if isClient {
 		msg += "| cli -> ser |"
-	}else{
+	} else {
 		msg += "| ser -> cli |"
 	}
 	return msg
 }
 
-func ReadStringFromByte(b []byte) (string,int) {
+func ReadStringFromByte(b []byte) (string, int) {
 
 	var l int
 	l = bytes.IndexByte(b, 0x00)
@@ -35,18 +35,18 @@ func LengthBinary(b []byte) (uint32, int) {
 		return uint32(first), 1
 	}
 	if first == 251 {
-		return 0,1
+		return 0, 1
 	}
 	if first == 252 {
-		return binary.LittleEndian.Uint32(b[1:2]),1
+		return binary.LittleEndian.Uint32(b[1:2]), 1
 	}
 	if first == 253 {
-		return binary.LittleEndian.Uint32(b[1:4]),3
+		return binary.LittleEndian.Uint32(b[1:4]), 3
 	}
 	if first == 254 {
-		return binary.LittleEndian.Uint32(b[1:9]),8
+		return binary.LittleEndian.Uint32(b[1:9]), 8
 	}
-	return 0,0
+	return 0, 0
 }
 
 func LengthEncodedInt(input []byte) (num uint64, isNull bool, n int) {

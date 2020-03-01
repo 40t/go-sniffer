@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/40t/go-sniffer/plugSrc/mongodb/build/internal/json"
 	"strconv"
 	"time"
+
+	"github.com/40t/go-sniffer/plugSrc/mongodb/build/internal/json"
 )
 
 // UnmarshalJSON unmarshals a JSON value that may hold non-standard

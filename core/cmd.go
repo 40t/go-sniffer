@@ -1,11 +1,11 @@
 package core
 
 import (
-	"os"
-	"strings"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
+	"strings"
 )
 
 const InternalCmdPrefix = "--"
@@ -18,27 +18,27 @@ const (
 )
 
 type Cmd struct {
-	Device string
+	Device     string
 	plugHandle *Plug
 }
 
 func NewCmd(p *Plug) *Cmd {
 
 	return &Cmd{
-		plugHandle:p,
+		plugHandle: p,
 	}
 }
 
-//start
+// start
 func (cm *Cmd) Run() {
 
-	//print help
+	// print help
 	if len(os.Args) <= 1 {
 		cm.printHelpMessage()
 		os.Exit(1)
 	}
 
-	//parse command
+	// parse command
 	firstArg := string(os.Args[1])
 	if strings.HasPrefix(firstArg, InternalCmdPrefix) {
 		cm.parseInternalCmd()
@@ -47,35 +47,35 @@ func (cm *Cmd) Run() {
 	}
 }
 
-//parse internal commend
-//like --help, --env, --device
+// parse internal commend
+// like --help, --env, --device
 func (cm *Cmd) parseInternalCmd() {
 
 	arg := string(os.Args[1])
 	cmd := strings.Trim(arg, InternalCmdPrefix)
 
 	switch cmd {
-		case InternalCmdHelp:
-			cm.printHelpMessage()
-			break
-		case InternalCmdEnv:
-			fmt.Println("External plug-in path : "+cm.plugHandle.dir)
-			break
-		case InternalCmdList:
-			cm.plugHandle.PrintList()
-			break
-		case InternalCmdVer:
-			fmt.Println(cxt.Version)
-			break
-		case InternalDevice:
-			cm.printDevice()
-			break
+	case InternalCmdHelp:
+		cm.printHelpMessage()
+		break
+	case InternalCmdEnv:
+		fmt.Println("External plug-in path : " + cm.plugHandle.dir)
+		break
+	case InternalCmdList:
+		cm.plugHandle.PrintList()
+		break
+	case InternalCmdVer:
+		fmt.Println(cxt.Version)
+		break
+	case InternalDevice:
+		cm.printDevice()
+		break
 	}
 	os.Exit(1)
 }
 
-//usage
-func (cm *Cmd) printHelpMessage()  {
+// usage
+func (cm *Cmd) printHelpMessage() {
 
 	fmt.Println("==================================================================================")
 	fmt.Println("[Usage]")
@@ -100,33 +100,33 @@ func (cm *Cmd) printHelpMessage()  {
 	fmt.Println("==================================================================================")
 }
 
-//print plug-in list
+// print plug-in list
 func (cm *Cmd) printPlugList() {
 	l := len(cm.plugHandle.InternalPlugList)
 	l += len(cm.plugHandle.ExternalPlugList)
-	fmt.Println("#    Number of plug-ins : "+strconv.Itoa(l))
+	fmt.Println("#    Number of plug-ins : " + strconv.Itoa(l))
 }
 
-//print device
+// print device
 func (cm *Cmd) printDevice() {
-	ifaces, err:= net.Interfaces()
+	ifaces, err := net.Interfaces()
 	if err != nil {
 		panic(err)
 	}
 	for _, iface := range ifaces {
 		addrs, _ := iface.Addrs()
-		for _,a:=range addrs {
+		for _, a := range addrs {
 			if ipnet, ok := a.(*net.IPNet); ok {
 				if ip4 := ipnet.IP.To4(); ip4 != nil {
-					fmt.Println("[device] : "+iface.Name+" : "+iface.HardwareAddr.String()+"  "+ip4.String())
+					fmt.Println("[device] : " + iface.Name + " : " + iface.HardwareAddr.String() + "  " + ip4.String())
 				}
 			}
 		}
 	}
 }
 
-//Parameters needed for plug-ins
-func (cm *Cmd) parsePlugCmd()  {
+// Parameters needed for plug-ins
+func (cm *Cmd) parsePlugCmd() {
 
 	if len(os.Args) < 3 {
 		fmt.Println("not found [Plug-in name]")
@@ -134,12 +134,8 @@ func (cm *Cmd) parsePlugCmd()  {
 		os.Exit(1)
 	}
 
-	cm.Device  = os.Args[1]
-	plugName  := os.Args[2]
-	plugParams:= os.Args[3:]
+	cm.Device = os.Args[1]
+	plugName := os.Args[2]
+	plugParams := os.Args[3:]
 	cm.plugHandle.SetOption(plugName, plugParams)
 }
-
-
-
-

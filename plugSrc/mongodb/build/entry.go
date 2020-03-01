@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/google/gopacket"
 	"io"
 	"strconv"
+
+	"github.com/google/gopacket"
 )
 
 const (
-	Port = 27017
+	Port    = 27017
 	Version = "0.1"
 	CmdPort = "-p"
 )
@@ -26,15 +27,14 @@ type stream struct {
 }
 
 type packet struct {
-
-	isClientFlow  bool   //client->server
+	isClientFlow bool // client->server
 
 	messageLength int
 	requestID     int
 	responseTo    int
-	opCode        int 	 //request type
+	opCode        int // request type
 
-	payload       io.Reader
+	payload io.Reader
 }
 
 var mongodbInstance *Mongodb
@@ -42,29 +42,29 @@ var mongodbInstance *Mongodb
 func NewInstance() *Mongodb {
 	if mongodbInstance == nil {
 		mongodbInstance = &Mongodb{
-			port   :Port,
-			version:Version,
-			source: make(map[string]*stream),
+			port:    Port,
+			version: Version,
+			source:  make(map[string]*stream),
 		}
 	}
 	return mongodbInstance
 }
 
-func (m *Mongodb) SetFlag(flg []string)  {
+func (m *Mongodb) SetFlag(flg []string) {
 	c := len(flg)
 	if c == 0 {
 		return
 	}
-	if c >> 1 != 1 {
+	if c>>1 != 1 {
 		panic("ERR : Mongodb Number of parameters")
 	}
-	for i:=0;i<c;i=i+2 {
+	for i := 0; i < c; i = i + 2 {
 		key := flg[i]
 		val := flg[i+1]
 
 		switch key {
 		case CmdPort:
-			p, err := strconv.Atoi(val);
+			p, err := strconv.Atoi(val)
 			if err != nil {
 				panic("ERR : port")
 			}
@@ -80,7 +80,7 @@ func (m *Mongodb) SetFlag(flg []string)  {
 }
 
 func (m *Mongodb) BPFFilter() string {
-	return "tcp and port "+strconv.Itoa(m.port);
+	return "tcp and port " + strconv.Itoa(m.port)
 }
 
 func (m *Mongodb) Version() string {
@@ -89,22 +89,22 @@ func (m *Mongodb) Version() string {
 
 func (m *Mongodb) ResolveStream(net, transport gopacket.Flow, buf io.Reader) {
 
-	//uuid
+	// uuid
 	uuid := fmt.Sprintf("%v:%v", net.FastHash(), transport.FastHash())
 
-	//resolve packet
+	// resolve packet
 	if _, ok := m.source[uuid]; !ok {
 
-		var newStream = stream {
-			packets:make(chan *packet, 100),
+		var newStream = stream{
+			packets: make(chan *packet, 100),
 		}
 
 		m.source[uuid] = &newStream
 		go newStream.resolve()
 	}
 
-	//read bi-directional packet
-	//server -> client || client -> server
+	// read bi-directional packet
+	// server -> client || client -> server
 	for {
 
 		newPacket := m.newPacket(net, transport, buf)
@@ -118,12 +118,12 @@ func (m *Mongodb) ResolveStream(net, transport gopacket.Flow, buf io.Reader) {
 
 func (m *Mongodb) newPacket(net, transport gopacket.Flow, r io.Reader) *packet {
 
-	//read packet
+	// read packet
 	var packet *packet
 	var err error
 	packet, err = readStream(r)
 
-	//stream close
+	// stream close
 	if err == io.EOF {
 		fmt.Println(net, transport, " close")
 		return nil
@@ -132,10 +132,10 @@ func (m *Mongodb) newPacket(net, transport gopacket.Flow, r io.Reader) *packet {
 		return nil
 	}
 
-	//set flow direction
+	// set flow direction
 	if transport.Src().String() == strconv.Itoa(m.port) {
 		packet.isClientFlow = false
-	}else{
+	} else {
 		packet.isClientFlow = true
 	}
 
@@ -145,7 +145,7 @@ func (m *Mongodb) newPacket(net, transport gopacket.Flow, r io.Reader) *packet {
 func (stm *stream) resolve() {
 	for {
 		select {
-		case packet := <- stm.packets:
+		case packet := <-stm.packets:
 			if packet.isClientFlow {
 				stm.resolveClientPacket(packet)
 			} else {
@@ -165,11 +165,11 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 	switch pk.opCode {
 
 	case OP_UPDATE:
-		zero               := ReadInt32(pk.payload)
+		zero := ReadInt32(pk.payload)
 		fullCollectionName := ReadString(pk.payload)
-		flags              := ReadInt32(pk.payload)
-		selector           := ReadBson2Json(pk.payload)
-		update             := ReadBson2Json(pk.payload)
+		flags := ReadInt32(pk.payload)
+		selector := ReadBson2Json(pk.payload)
+		update := ReadBson2Json(pk.payload)
 		_ = zero
 		_ = flags
 
@@ -180,9 +180,9 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		)
 
 	case OP_INSERT:
-		flags              := ReadInt32(pk.payload)
+		flags := ReadInt32(pk.payload)
 		fullCollectionName := ReadString(pk.payload)
-		command            := ReadBson2Json(pk.payload)
+		command := ReadBson2Json(pk.payload)
 		_ = flags
 
 		msg = fmt.Sprintf(" [Insert] [coll:%s] %v",
@@ -191,16 +191,16 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		)
 
 	case OP_QUERY:
-		flags              := ReadInt32(pk.payload)
+		flags := ReadInt32(pk.payload)
 		fullCollectionName := ReadString(pk.payload)
-		numberToSkip       := ReadInt32(pk.payload)
-		numberToReturn     := ReadInt32(pk.payload)
+		numberToSkip := ReadInt32(pk.payload)
+		numberToReturn := ReadInt32(pk.payload)
 		_ = flags
 		_ = numberToSkip
 		_ = numberToReturn
 
-		command            := ReadBson2Json(pk.payload)
-		selector           := ReadBson2Json(pk.payload)
+		command := ReadBson2Json(pk.payload)
+		selector := ReadBson2Json(pk.payload)
 
 		msg = fmt.Sprintf(" [Query] [coll:%s] %v %v",
 			fullCollectionName,
@@ -209,11 +209,11 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		)
 
 	case OP_COMMAND:
-		database           := ReadString(pk.payload)
-		commandName        := ReadString(pk.payload)
-		metaData           := ReadBson2Json(pk.payload)
-		commandArgs        := ReadBson2Json(pk.payload)
-		inputDocs          := ReadBson2Json(pk.payload)
+		database := ReadString(pk.payload)
+		commandName := ReadString(pk.payload)
+		metaData := ReadBson2Json(pk.payload)
+		commandArgs := ReadBson2Json(pk.payload)
+		inputDocs := ReadBson2Json(pk.payload)
 
 		msg = fmt.Sprintf(" [Commend] [DB:%s] [Cmd:%s] %v %v %v",
 			database,
@@ -224,10 +224,10 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		)
 
 	case OP_GET_MORE:
-		zero               := ReadInt32(pk.payload)
+		zero := ReadInt32(pk.payload)
 		fullCollectionName := ReadString(pk.payload)
-		numberToReturn     := ReadInt32(pk.payload)
-		cursorId           := ReadInt64(pk.payload)
+		numberToReturn := ReadInt32(pk.payload)
+		cursorId := ReadInt64(pk.payload)
 		_ = zero
 
 		msg = fmt.Sprintf(" [Query more] [coll:%s] [num of reply:%v] [cursor:%v]",
@@ -237,10 +237,10 @@ func (stm *stream) resolveClientPacket(pk *packet) {
 		)
 
 	case OP_DELETE:
-		zero               := ReadInt32(pk.payload)
+		zero := ReadInt32(pk.payload)
 		fullCollectionName := ReadString(pk.payload)
-		flags              := ReadInt32(pk.payload)
-		selector           := ReadBson2Json(pk.payload)
+		flags := ReadInt32(pk.payload)
+		selector := ReadBson2Json(pk.payload)
 		_ = zero
 		_ = flags
 
@@ -263,10 +263,10 @@ func readStream(r io.Reader) (*packet, error) {
 	var buf bytes.Buffer
 	p := &packet{}
 
-	//header
+	// header
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(r, header); err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	// message length
