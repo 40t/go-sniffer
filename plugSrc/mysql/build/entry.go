@@ -232,7 +232,7 @@ func (stm *stream) resolveServerPacket(payload []byte, seq int) {
 
 		case 0x00:
 			var pos = 1
-			l,_ := LengthBinary(payload[pos:])
+			l,_,_ := LengthEncodedInt(payload[pos:])
 			affectedRows := int(l)
 
 			msg += GetNowStr(false)+"%s Effect Row:%s"
