@@ -2,7 +2,9 @@ package build
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
+	"strconv"
 	"time"
 )
 
@@ -12,7 +14,7 @@ func GetNowStr(isClient bool) string {
 	msg += time.Now().Format(layout)
 	if isClient {
 		msg += "| cli -> ser |"
-	}else{
+	} else {
 		msg += "| ser -> cli |"
 	}
 	return msg
@@ -31,6 +33,11 @@ func ReadOnce() {
 
 }
 
+func ReadByte(r io.Reader) (n byte) {
+	binary.Read(r, binary.BigEndian, &n)
+	return
+}
+
 func ReadInt16(r io.Reader) (n int16) {
 	binary.Read(r, binary.BigEndian, &n)
 	return
@@ -41,8 +48,13 @@ func ReadInt32(r io.Reader) (n int32) {
 	return
 }
 
-func ReadInt64(r io.Reader) (n int64) {
+func ReadUint32(r io.Reader) (n uint32) {
 	binary.Read(r, binary.BigEndian, &n)
+	return
+}
+
+func ReadInt64(r io.Reader) (err error, n int64) {
+	err = binary.Read(r, binary.BigEndian, &n)
 	return
 }
 
@@ -52,7 +64,7 @@ func ReadString(r io.Reader) (string, int) {
 
 	//-1 => null
 	if l == -1 {
-		return " ",1
+		return " ", 1
 	}
 
 	str := make([]byte, l)
@@ -62,6 +74,7 @@ func ReadString(r io.Reader) (string, int) {
 
 	return string(str), l
 }
+
 //
 //func TryReadInt16(r io.Reader) (n int16, err error) {
 //
@@ -76,19 +89,70 @@ func ReadString(r io.Reader) (string, int) {
 func ReadBytes(r io.Reader) []byte {
 
 	l := int(ReadInt32(r))
+	result := make([]byte, 0)
 
-	var result []byte
+	if l <= 0 {
+		return result
+	}
+
 	var b = make([]byte, l)
-	for i:=0;i<l;i++ {
+	for i := 0; i < l; i++ {
 
 		_, err := r.Read(b)
 
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
 			panic(err)
 		}
 
-		result = append(result, b[0])
+		result = append(result, b...)
 	}
 
 	return result
+}
+
+func ReadMessages(r io.Reader, version int16) []*Message {
+	switch version {
+	case 0:
+		return ReadMessagesV1(r)
+	case 1:
+		return ReadMessagesV1(r)
+	}
+
+	return make([]*Message, 0)
+}
+
+func ReadMessagesV1(r io.Reader) []*Message {
+	var err error
+	messages := make([]*Message, 0)
+	for {
+		message := Message{}
+		err, message.Offset = ReadInt64(r)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			if err != io.ErrUnexpectedEOF {
+				fmt.Printf("read message offset , err: %+v\n", err)
+			}
+			break
+		}
+		_ = ReadInt32(r) // message size
+		message.Crc = ReadUint32(r)
+		message.Magic = ReadByte(r)
+		message.CompressCode = ReadByte(r)
+		message.Key = ReadBytes(r)
+		message.Value = ReadBytes(r)
+		messages = append(messages, &message)
+	}
+	return messages
+}
+
+func GetRquestName(apiKey int16) string {
+	if name, ok := RquestNameMap[apiKey]; ok {
+		return name
+	}
+	return strconv.Itoa(int(apiKey))
 }
