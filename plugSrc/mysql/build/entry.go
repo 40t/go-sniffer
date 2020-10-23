@@ -149,7 +149,7 @@ func (m *Mysql) newPacket(net, transport gopacket.Flow, r io.Reader) *packet {
 		length:payload.Len(),
 		payload:payload.Bytes(),
 	}
-	if transport.Src().String() == strconv.Itoa(Port) {
+	if transport.Src().String() == strconv.Itoa(m.port) {
 		pk.isClientFlow = false
 	}else{
 		pk.isClientFlow = true
