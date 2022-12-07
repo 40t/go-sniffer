@@ -1,0 +1,13 @@
+FROM centos:7
+
+RUN yum -y install wget
+
+RUN wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm; \
+    rpm -Uvh epel-release-latest-7*.rpm; \
+    yum makecache
+
+
+RUN yum -y install libpcap-devel go
+
+RUN go get -v -u github.com/40t/go-sniffer;\
+    cp -rf $(go env GOPATH)/bin/go-sniffer /usr/local/bin

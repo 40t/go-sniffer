@@ -5,7 +5,7 @@
 > 抓包截取项目中的数据库请求并解析成相应的语句，如mysql协议会解析为sql语句,便于调试。
 > 不要修改代码，直接嗅探项目中的数据请求。
 
-[![GitHub license](https://img.shields.io/github/license/40t/go-sniffer.svg?style=popout-square)](https://github.com/40t/go-sniffer/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/40t/go-sniffer.svg?style=popout-square)](https://go-sniffer/blob/master/LICENSE)
 
 #### [中文使用说明](#中文使用说明)
 
@@ -21,7 +21,7 @@
 ``` bash
 $ go-sniffer en0 mysql
 ```
-![image](https://github.com/40t/go-sniffer/raw/master/images/demo.gif)
+![image](https://go-sniffer/raw/master/images/demo.gif)
 ## Setup:
 - support : `MacOS` `Linux` `Unix`
 - not support : `windows`
@@ -41,7 +41,7 @@ $ apt-get install libpcap-dev
 ```
 ### RUN
 ``` bash
-$ go get -v -u github.com/40t/go-sniffer
+$ go get -v -u go-sniffer
 $ cp -rf $(go env GOPATH)/bin/go-sniffer /usr/local/bin
 $ go-sniffer
 ```

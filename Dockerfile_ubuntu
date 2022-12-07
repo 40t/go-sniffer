@@ -1,0 +1,7 @@
+FROM golang:1.16.15-stretch
+
+RUN apt update;\
+    apt install -y libpcap-dev
+
+RUN go get -v -u github.com/40t/go-sniffer;\
+    cp -rf $(go env GOPATH)/bin/go-sniffer /usr/local/bin
